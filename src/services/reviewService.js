@@ -1,57 +1,116 @@
 import axios from 'axios';
-import { API_ENDPOINTS, getAuthHeader } from '../config/api';
+import authService from './authService';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const reviewService = {
-  // Get all reviews for a movie
-  getMovieReviews: async (movieId) => {
-    const response = await axios.get(API_ENDPOINTS.MOVIE_REVIEWS(movieId), {
-      headers: getAuthHeader(),
-    });
-    return response.data;
+  getAllReviews: async () => {
+    try {
+      const token = authService.getToken();
+      const response = await axios.get(`${API_URL}/api/reviews`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
 
-  // Get user's reviews
-  getUserReviews: async (userId) => {
-    const response = await axios.get(API_ENDPOINTS.USER_REVIEWS(userId), {
-      headers: getAuthHeader(),
-    });
-    return response.data;
+  getReviewById: async (id) => {
+    try {
+      const token = authService.getToken();
+      const response = await axios.get(`${API_URL}/api/reviews/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
 
-  // Add a new review
-  addReview: async (reviewData) => {
-    const response = await axios.post(
-      API_ENDPOINTS.REVIEWS,
-      reviewData,
-      {
-        headers: getAuthHeader(),
-      }
-    );
-    return response.data;
+  getReviewsByMovieId: async (movieId) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/reviews/movie/${movieId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
 
-  // Update a review
-  updateReview: async (reviewId, reviewData) => {
-    const response = await axios.put(
-      `${API_ENDPOINTS.REVIEWS}/${reviewId}`,
-      reviewData,
-      {
-        headers: getAuthHeader(),
-      }
-    );
-    return response.data;
+  getReviewsByUserId: async (userId) => {
+    try {
+      const token = authService.getToken();
+      const response = await axios.get(`${API_URL}/api/reviews/user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
 
-  // Delete a review
-  deleteReview: async (reviewId) => {
-    const response = await axios.delete(
-      `${API_ENDPOINTS.REVIEWS}/${reviewId}`,
-      {
-        headers: getAuthHeader(),
-      }
-    );
-    return response.data;
+  getAverageRatingForMovie: async (movieId) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/reviews/movie/${movieId}/average-rating`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
+
+  getHighlyRatedReviews: async (minRating) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/reviews/rating/${minRating}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  createReview: async (review) => {
+    try {
+      const token = authService.getToken();
+      const user = authService.getCurrentUser();
+      
+      // Add user information to the review
+      const reviewWithUser = {
+        ...review,
+        userId: user.id,
+        username: user.username
+      };
+      
+      const response = await axios.post(`${API_URL}/api/reviews`, reviewWithUser, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  updateReview: async (id, updatedReview) => {
+    try {
+      const token = authService.getToken();
+      const response = await axios.put(`${API_URL}/api/reviews/${id}`, updatedReview, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  deleteReview: async (id) => {
+    try {
+      const token = authService.getToken();
+      const response = await axios.delete(`${API_URL}/api/reviews/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  }
 };
 
 export default reviewService; 
